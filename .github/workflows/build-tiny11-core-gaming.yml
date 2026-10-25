@@ -609,13 +609,20 @@ jobs:
             Write-Warning "autounattend.xml not found in root!"
           }
 
-      - name: Optimize Environment for DISM
+      - name: Optimize Environment for DISM and Defender
+        shell: pwsh
         run: |
-          # Отключаем сканирование папки сборки антивирусом Windows Defender
+          Write-Output "Adding exclusion path for Windows Defender..."
           Set-MpPreference -ExclusionPath "D:\a\tiny11-automated\tiny11-automated"
-          # Принудительно очищаем зависшие монтирования образов
+          
+          # НАДСТРОЙКА: Сброс и выдача полных прав на папку скриптов LCU
+          Write-Output "Resetting ACL permissions for LCU folder..."
+          takeown /f "D:\a\tiny11-automated\tiny11-automated\scripts" /r /d y
+          icacls "D:\a\tiny11-automated\tiny11-automated\scripts" /grant "${env:USERNAME}:(OI)(CI)F" /t /c /q
+          
+          Write-Output "Cleaning up any stale DISM mounts..."
           dism.exe /Cleanup-Wim
-        shell: powershell
+          Write-Output "Environment optimized."
 
       - name: Verify headless script
         shell: pwsh
@@ -631,6 +638,15 @@ jobs:
 
           Write-Output "Headless Core script found: $scriptPath"
           Write-Output "Script size: $([math]::Round((Get-Item $scriptPath).Length / 1KB, 2)) KB"
+
+      - name: Optimize Environment for DISM and Defender
+        shell: pwsh
+        run: |
+          Write-Output "Adding exclusion path for Windows Defender..."
+          Set-MpPreference -ExclusionPath "D:\a\tiny11-automated\tiny11-automated"
+          Write-Output "Cleaning up any stale DISM mounts..."
+          dism.exe /Cleanup-Wim
+          Write-Output "Environment optimized."
 
       - name: Run tiny11coremaker (headless, Core-Gaming)
         shell: pwsh
