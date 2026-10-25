@@ -202,6 +202,7 @@ env:
   ARIA2C_CONNECTIONS: '16'
   ARIA2C_SPLIT: '16'
   POWERSHELL_TELEMETRY_OPTOUT: '1'
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
 
 jobs:
   build-tiny11-core-gaming:
@@ -607,6 +608,14 @@ jobs:
           } else {
             Write-Warning "autounattend.xml not found in root!"
           }
+
+      - name: Optimize Environment for DISM
+        run: |
+          # Отключаем сканирование папки сборки антивирусом Windows Defender
+          Set-MpPreference -ExclusionPath "D:\a\tiny11-automated\tiny11-automated"
+          # Принудительно очищаем зависшие монтирования образов
+          dism.exe /Cleanup-Wim
+        shell: powershell
 
       - name: Verify headless script
         shell: pwsh
